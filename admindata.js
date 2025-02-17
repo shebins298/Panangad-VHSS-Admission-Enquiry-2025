@@ -53,18 +53,41 @@ function loadEnquiries() {
 
 // Edit enquiry
 function editEnquiry(enquiryId) {
-  const newStudentName = prompt("Enter new student name:");
-  if (newStudentName) {
-    firebase.firestore().collection("enquiries").doc(enquiryId).update({
-      studentName: newStudentName
-    }).then(() => {
-      alert("Enquiry updated successfully!");
-      location.reload(); // Reload to reflect changes
-    }).catch((error) => {
-      console.error("Error updating enquiry: ", error);
-      alert("There was an error updating the enquiry. Please try again.");
-    });
-  }
+  const enquiryRef = firebase.firestore().collection("enquiries").doc(enquiryId);
+
+  // Get current enquiry data to pre-fill the fields
+  enquiryRef.get().then((doc) => {
+    if (doc.exists) {
+      const enquiry = doc.data();
+
+      // Prompt for new data (or you can create custom modal)
+      const newStudentName = prompt("Enter new student name:", enquiry.studentName);
+      const newClassApplying = prompt("Enter new class applying:", enquiry.classApplying);
+      const newParentName = prompt("Enter new parent name:", enquiry.parentName);
+      const newPhone = prompt("Enter new phone number:", enquiry.phone);
+
+      // Only update if data was provided
+      if (newStudentName && newClassApplying && newParentName && newPhone) {
+        enquiryRef.update({
+          studentName: newStudentName,
+          classApplying: newClassApplying,
+          parentName: newParentName,
+          phone: newPhone
+        }).then(() => {
+          alert("Enquiry updated successfully!");
+          location.reload(); // Reload to reflect changes
+        }).catch((error) => {
+          console.error("Error updating enquiry: ", error);
+          alert("There was an error updating the enquiry. Please try again.");
+        });
+      } else {
+        alert("All fields must be filled in to update.");
+      }
+    }
+  }).catch((error) => {
+    console.error("Error fetching enquiry data: ", error);
+    alert("There was an error fetching the enquiry data.");
+  });
 }
 
 // Delete enquiry
