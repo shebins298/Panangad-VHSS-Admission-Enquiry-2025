@@ -12,13 +12,18 @@ document.addEventListener("DOMContentLoaded", function () {
       const userRef = db.collection("user").doc(user.uid);
       try {
         const doc = await userRef.get();
-        if (doc.exists && doc.data().admin === true) {
-          window.location.href = "admin.html";
+        if (doc.exists) {
+          if (doc.data().admin === true) {
+            window.location.href = "admin.html"; // Redirect admin users
+          } else {
+            message.innerText = "Waiting for admin approval. Contact admin if needed.";
+            loginButton.style.display = "none"; // Hide login button since the user is already logged in
+          }
         } else {
-          message.innerText = "Access Denied! Sign in again.";
-          await firebase.auth().signOut();
+          // New users should not be logged out here
+          message.innerText = "Your account is not registered. Try signing in again.";
           loginButton.style.display = "block";
-          loadingIndicator.style.display = "none";
+          await firebase.auth().signOut(); // Log them out only if they are unregistered
         }
       } catch (error) {
         console.error("Error checking admin status on load:", error);
@@ -51,10 +56,10 @@ document.addEventListener("DOMContentLoaded", function () {
           window.location.href = "admin.html";
         } else {
           message.innerText = "Your login request is sent to admin.";
-          await firebase.auth().signOut();
-          loginButton.style.display = "block";
+          loginButton.style.display = "none"; // Hide login button instead of signing out
         }
       } else {
+        // Register new users in Firestore
         await userRef.set({
           email: user.email,
           displayName: user.displayName,
@@ -62,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
           status: "pending"
         });
         message.innerText = "Your login request is sent to admin.";
-        await firebase.auth().signOut();
+        await firebase.auth().signOut(); // Log them out only after registration
         loginButton.style.display = "block";
       }
     } catch (error) {
