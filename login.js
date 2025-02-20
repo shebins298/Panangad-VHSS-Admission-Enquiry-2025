@@ -11,21 +11,6 @@ document.addEventListener("DOMContentLoaded", function () {
             const userRef = db.collection("user").doc(user.uid);
             const doc = await userRef.get();
 
-            // ✅ If user is new, create the document instead of logging out
-            if (!doc.exists) {
-                await userRef.set({
-                    email: user.email,
-                    displayName: user.displayName,
-                    admin: false,
-                    status: "pending"
-                });
-
-                message.innerText = "Your login request is sent to admin.";
-                loginButton.style.display = "none";
-                await firebase.auth().signOut(); // Log them out after registering
-                return;
-            }
-
             // ✅ If user exists, check admin status
             if (doc.data().admin === true) {
                 window.location.href = "admin.html";
