@@ -6,23 +6,6 @@ document.addEventListener("DOMContentLoaded", function () {
     loginButton.style.display = "none";
     loadingIndicator.style.display = "block";
 
-    firebase.auth().onAuthStateChanged(async function (user) {
-        if (user) {
-            const userRef = db.collection("user").doc(user.uid);
-            const doc = await userRef.get();
-
-            // ✅ If user exists, check admin status
-            if (doc.data().admin === true) {
-                window.location.href = "admin.html";
-            } else {
-                message.innerText = "Waiting for admin approval. Contact admin if needed.";
-                loginButton.style.display = "none";
-            }
-        } else {
-            loginButton.style.display = "block";
-            loadingIndicator.style.display = "none";
-        }
-    });
 
     loginButton.addEventListener("click", async function () {
         loginButton.style.display = "none";
