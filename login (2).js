@@ -1,0 +1,85 @@
+document.addEventListener("DOMContentLoaded", function () {
+    const loginButton = document.getElementById("googleSignInBtn");
+    const loadingIndicator = document.getElementById("loading");
+    const message = document.getElementById("message");
+
+    loginButton.style.display = "none";
+    loadingIndicator.style.display = "block";
+
+    firebase.auth().onAuthStateChanged(async function (user) {
+        if (user) {
+            const userRef = db.collection("user").doc(user.uid);
+            const doc = await userRef.get();
+
+            // ✅ If user is new, create the document instead of logging out
+            if (!doc.exists) {
+                await userRef.set({
+                    email: user.email,
+                    displayName: user.displayName,
+                    admin: false,
+                    status: "pending"
+                });
+
+                message.innerText = "Your login request is sent to admin.";
+                loginButton.style.display = "none";
+                await firebase.auth().signOut(); // Log them out after registering
+                return;
+            }
+
+            // ✅ If user exists, check admin status
+            if (doc.data().admin === true) {
+                window.location.href = "admin.html";
+            } else {
+                message.innerText = "Waiting for admin approval. Contact admin if needed.";
+                loginButton.style.display = "none";
+            }
+        } else {
+            loginButton.style.display = "block";
+            loadingIndicator.style.display = "none";
+        }
+    });
+
+    loginButton.addEventListener("click", async function () {
+        loginButton.style.display = "none";
+        loadingIndicator.style.display = "block";
+        message.innerText = "";
+
+        try {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            const result = await firebase.auth().signInWithPopup(provider);
+            const user = result.user;
+
+            // ✅ Ensure user is added to Firestore before checking
+            const userRef = db.collection("user").doc(user.uid);
+            const doc = await userRef.get();
+
+            if (!doc.exists) {
+                await userRef.set({
+                    email: user.email,
+                    displayName: user.displayName,
+                    admin: false,
+                    status: "pending"
+                });
+
+                message.innerText = "Your login request is sent to admin.";
+                loginButton.style.display = "none";
+                await firebase.auth().signOut();
+                return;
+            }
+
+            if (doc.data().admin === true) {
+                window.location.href = "admin.html";
+            } else {
+                message.innerText = "Your login request is sent to admin.";
+                loginButton.style.display = "none";
+            }
+
+        } catch (error) {
+            console.error("Error during sign in:", error);
+            message.innerText = "Error during sign in. Please try again.";
+            loginButton.style.display = "block";
+        } finally {
+            loadingIndicator.style.display = "none";
+        }
+    });
+});
