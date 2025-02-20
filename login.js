@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (doc.exists && doc.data().admin === true) {
           window.location.href = "admin.html";
         } else {
-          message.innerText = "Access Denied! Contact Admin.";
+          message.innerText = "Access Denied! Sign in again.";
           await firebase.auth().signOut();
           loginButton.style.display = "block";
           loadingIndicator.style.display = "none";
